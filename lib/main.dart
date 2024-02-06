@@ -40,20 +40,30 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final Completer<GoogleMapController> _controller = Completer();
 
-  static const LatLng _sourceLocation = LatLng(22.2784, -97.8645);
-  static const LatLng _destinationLocation = LatLng(22.2750, -97.8646);
+  static const LatLng _sourceLocation = LatLng(22.278458, -97.864515);
+  static const LatLng _destinationLocation = LatLng(22.275058, -97.864556);
+  static const LatLng _ruta2 = LatLng(22.275056, -97.864535);
+  static const LatLng _ruta3 = LatLng(22.275940, -97.859392);
+  static const LatLng _ruta4 = LatLng(22.278462, -97.864502);
+
+  static const LatLng _paradaPrincipal = LatLng(22.278757, -97.861059);
+  static const LatLng _paradaColera = LatLng(22.278201, -97.865356);
+  static const LatLng _paradaIngenieria = LatLng(22.276978, -97.865429);
+  static const LatLng _paradaDerecho = LatLng(22.275574, -97.865461);
+  static const LatLng _paradaArquitectura = LatLng(22.275007, -97.864128);
+  static const LatLng _paradaComercio = LatLng(22.275005, -97.862788);
+  static const LatLng _paradaGym = LatLng(22.275872, -97.859425);
+  static const LatLng _paradaCafeteria = LatLng(22.276978, -97.859392);
 
   List<LatLng> polylineCoordinates = [];
   LocationData? currentLocation;
 
-  void getPolyline() async {
-    polylineCoordinates.clear();
+  Future<void> addPolyline(source, dest) async {
     PolylinePoints polylinePoints = PolylinePoints();
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
       google_api_key,
-      PointLatLng(_sourceLocation.latitude, _sourceLocation.longitude),
-      PointLatLng(
-          _destinationLocation.latitude, _destinationLocation.longitude),
+      PointLatLng(source.latitude, source.longitude),
+      PointLatLng(dest.latitude, dest.longitude),
     );
 
     if (result.points.isNotEmpty) {
@@ -61,6 +71,13 @@ class _MyHomePageState extends State<MyHomePage> {
         polylineCoordinates.add(LatLng(point.latitude, point.longitude));
       }
     }
+  }
+
+  void getPolyline() async {
+    polylineCoordinates.clear();
+    await addPolyline(_sourceLocation, _destinationLocation);
+    await addPolyline(_ruta2, _ruta3);
+    await addPolyline(_ruta3, _ruta4);
   }
 
   void getCurrentLocation() async {
@@ -123,16 +140,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     currentLocation!.longitude!,
                   ),
                 ),
-                const Marker(
-                  markerId: MarkerId('source'),
-                  position: _sourceLocation,
-                  // ripple: true,
-                ),
-                const Marker(
-                  markerId: MarkerId('destination'),
-                  position: _destinationLocation,
-                  // ripple: true,
-                ),
               },
               mapId: _controller.future.then<int>((value) => value.mapId),
               child: GoogleMap(
@@ -149,6 +156,64 @@ class _MyHomePageState extends State<MyHomePage> {
                     color: Colors.teal,
                     points: polylineCoordinates,
                     width: 5,
+                  ),
+                },
+                markers: {
+                  Marker(
+                    markerId: const MarkerId('paradaPrincipal'),
+                    position: _paradaPrincipal,
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen,
+                    ),
+                  ),
+                  Marker(
+                    markerId: const MarkerId('paradaColera'),
+                    position: _paradaColera,
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen,
+                    ),
+                  ),
+                  Marker(
+                    markerId: const MarkerId('paradaIngenieria'),
+                    position: _paradaIngenieria,
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen,
+                    ),
+                  ),
+                  Marker(
+                    markerId: const MarkerId('paradaDerecho'),
+                    position: _paradaDerecho,
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen,
+                    ),
+                  ),
+                  Marker(
+                    markerId: const MarkerId('paradaArquitectura'),
+                    position: _paradaArquitectura,
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen,
+                    ),
+                  ),
+                  Marker(
+                    markerId: const MarkerId('paradaComercio'),
+                    position: _paradaComercio,
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen,
+                    ),
+                  ),
+                  Marker(
+                    markerId: const MarkerId('paradaGym'),
+                    position: _paradaGym,
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen,
+                    ),
+                  ),
+                  Marker(
+                    markerId: const MarkerId('paradaCafeteria'),
+                    position: _paradaCafeteria,
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen,
+                    ),
                   ),
                 },
                 onMapCreated: (GoogleMapController controller) {
