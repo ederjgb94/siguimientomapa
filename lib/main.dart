@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animarker/core/ripple_marker.dart';
+import 'package:flutter_animarker/widgets/animarker.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 import 'package:siguimientomapa/constants.dart';
 
 void main() {
@@ -37,12 +40,13 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final Completer<GoogleMapController> _controller = Completer();
 
-  static const LatLng _sourceLocation = LatLng(37.33500926, -122.03272188);
-  static const LatLng _destinationLocation = LatLng(37.33429383, -122.0660055);
+  static const LatLng _sourceLocation = LatLng(22.2784, -97.8645);
+  static const LatLng _destinationLocation = LatLng(22.2750, -97.8646);
 
   List<LatLng> polylineCoordinates = [];
+  LocationData? currentLocation;
 
-  Future<Object?>? getPolyline() async {
+  void getPolyline() async {
     polylineCoordinates.clear();
     PolylinePoints polylinePoints = PolylinePoints();
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
@@ -57,12 +61,39 @@ class _MyHomePageState extends State<MyHomePage> {
         polylineCoordinates.add(LatLng(point.latitude, point.longitude));
       }
     }
-    return polylineCoordinates;
+  }
+
+  void getCurrentLocation() async {
+    Location location = Location();
+
+    location.getLocation().then((LocationData locationData) {
+      currentLocation = locationData;
+      setState(() {});
+    });
+
+    GoogleMapController controller = await _controller.future;
+    location.onLocationChanged.listen((LocationData locationData) {
+      currentLocation = locationData;
+      controller.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(
+              currentLocation!.latitude!,
+              currentLocation!.longitude!,
+            ),
+            zoom: 16,
+          ),
+        ),
+      );
+      setState(() {});
+    });
   }
 
   @override
   void initState() {
-    //getPolyline();
+    getCurrentLocation();
+    getPolyline();
+
     super.initState();
   }
 
@@ -72,33 +103,59 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: FutureBuilder(
-          future: getPolyline(),
-          builder: (context, snapshot) {
-            return GoogleMap(
-              initialCameraPosition: const CameraPosition(
-                target: _sourceLocation,
-                zoom: 12.5,
-              ),
-              polylines: {
-                Polyline(
-                  polylineId: const PolylineId('route'),
-                  color: Colors.red,
-                  points: polylineCoordinates,
-                ),
-              },
+      body: currentLocation == null
+          ? const Text('Cargando')
+          : Animarker(
+              zoom: 16,
+              rippleDuration: const Duration(milliseconds: 1500),
+              rippleRadius: 0,
+              useRotation: true,
+              runExpressAfter: 0,
+              angleThreshold: 0,
+              rippleColor: Colors.green,
+              // curve: Curves.bounceInOut,
+              duration: const Duration(milliseconds: 500),
               markers: {
+                RippleMarker(
+                  markerId: const MarkerId('currentLocation'),
+                  position: LatLng(
+                    currentLocation!.latitude!,
+                    currentLocation!.longitude!,
+                  ),
+                ),
                 const Marker(
                   markerId: MarkerId('source'),
                   position: _sourceLocation,
+                  // ripple: true,
                 ),
                 const Marker(
                   markerId: MarkerId('destination'),
                   position: _destinationLocation,
+                  // ripple: true,
                 ),
               },
-            );
-          }),
+              mapId: _controller.future.then<int>((value) => value.mapId),
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(
+                    currentLocation!.latitude!,
+                    currentLocation!.longitude!,
+                  ),
+                  zoom: 16,
+                ),
+                polylines: {
+                  Polyline(
+                    polylineId: const PolylineId('route'),
+                    color: Colors.teal,
+                    points: polylineCoordinates,
+                    width: 5,
+                  ),
+                },
+                onMapCreated: (GoogleMapController controller) {
+                  _controller.complete(controller);
+                },
+              ),
+            ),
     );
   }
 }
