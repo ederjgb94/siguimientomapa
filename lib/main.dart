@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animarker/core/ripple_marker.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_animarker/widgets/animarker.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:marker_icon/marker_icon.dart';
 import 'package:siguimientomapa/constants.dart';
 
 void main() {
@@ -88,28 +90,39 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {});
     });
 
-    GoogleMapController controller = await _controller.future;
+    // GoogleMapController controller = await _controller.future;
     location.onLocationChanged.listen((LocationData locationData) {
       currentLocation = locationData;
-      controller.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: LatLng(
-              currentLocation!.latitude!,
-              currentLocation!.longitude!,
-            ),
-            zoom: 16,
-          ),
-        ),
-      );
+      // controller.animateCamera(
+      //   CameraUpdate.newCameraPosition(
+      //     CameraPosition(
+      //       target: LatLng(
+      //         currentLocation!.latitude!,
+      //         currentLocation!.longitude!,
+      //       ),
+      //       zoom: 16,
+      //     ),
+      //   ),
+      // );
       setState(() {});
     });
   }
 
+  getMarkerIcon() async {
+    return await MarkerIcon.pictureAsset(
+      assetPath: 'assets/bus01.png',
+      width: 90,
+      height: 90,
+    );
+  }
+
+  var markerIcon = BitmapDescriptor.defaultMarker;
+
   @override
   void initState() {
-    getCurrentLocation();
     getPolyline();
+    getMarkerIcon().then((value) => markerIcon = value);
+    getCurrentLocation();
 
     super.initState();
   }
@@ -128,93 +141,92 @@ class _MyHomePageState extends State<MyHomePage> {
               rippleRadius: 0,
               useRotation: true,
               runExpressAfter: 0,
-              angleThreshold: 0,
+              angleThreshold: -1,
+              shouldAnimateCamera: false,
               rippleColor: Colors.green,
-              // curve: Curves.bounceInOut,
+              curve: Curves.decelerate,
               duration: const Duration(milliseconds: 500),
               markers: {
-                RippleMarker(
+                Marker(
                   markerId: const MarkerId('currentLocation'),
                   position: LatLng(
                     currentLocation!.latitude!,
                     currentLocation!.longitude!,
                   ),
+                  icon: markerIcon,
                 ),
               },
               mapId: _controller.future.then<int>((value) => value.mapId),
               child: GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: LatLng(
-                    currentLocation!.latitude!,
-                    currentLocation!.longitude!,
-                  ),
+                initialCameraPosition: const CameraPosition(
+                  target: LatLng(22.276656, -97.861769),
                   zoom: 16,
                 ),
                 polylines: {
                   Polyline(
                     polylineId: const PolylineId('route'),
-                    color: Colors.teal,
+                    color: Colors.yellow.shade900,
                     points: polylineCoordinates,
-                    width: 5,
+                    width: 2,
                   ),
                 },
                 markers: {
-                  Marker(
+                  RippleMarker(
                     markerId: const MarkerId('paradaPrincipal'),
                     position: _paradaPrincipal,
                     icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen,
+                      BitmapDescriptor.hueYellow,
                     ),
                   ),
                   Marker(
                     markerId: const MarkerId('paradaColera'),
                     position: _paradaColera,
                     icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen,
+                      BitmapDescriptor.hueYellow,
                     ),
                   ),
                   Marker(
                     markerId: const MarkerId('paradaIngenieria'),
                     position: _paradaIngenieria,
                     icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen,
+                      BitmapDescriptor.hueYellow,
                     ),
                   ),
                   Marker(
                     markerId: const MarkerId('paradaDerecho'),
                     position: _paradaDerecho,
                     icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen,
+                      BitmapDescriptor.hueYellow,
                     ),
                   ),
                   Marker(
                     markerId: const MarkerId('paradaArquitectura'),
                     position: _paradaArquitectura,
                     icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen,
+                      BitmapDescriptor.hueYellow,
                     ),
                   ),
                   Marker(
                     markerId: const MarkerId('paradaComercio'),
                     position: _paradaComercio,
                     icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen,
+                      BitmapDescriptor.hueYellow,
                     ),
                   ),
                   Marker(
                     markerId: const MarkerId('paradaGym'),
                     position: _paradaGym,
                     icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen,
+                      BitmapDescriptor.hueYellow,
                     ),
                   ),
-                  Marker(
-                    markerId: const MarkerId('paradaCafeteria'),
-                    position: _paradaCafeteria,
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen,
-                    ),
-                  ),
+                  // Marker(
+                  //   markerId: const MarkerId('paradaCafeteria'),
+                  //   position: _paradaCafeteria,
+                  //   icon: BitmapDescriptor.defaultMarkerWithHue(
+                  //     BitmapDescriptor.hueYellow,
+                  //   ),
+                  // ),
                 },
                 onMapCreated: (GoogleMapController controller) {
                   _controller.complete(controller);
